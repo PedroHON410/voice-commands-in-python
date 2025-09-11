@@ -10,19 +10,23 @@ def listen_mic():
     try:
         text = microphone.recognize_google(audio, language='pt-BR')
         print("You say: " + text)
+        return text.lower()
     except sr.UnknownValueError:
-        print("I didn't understand what you said!")
+       return "I didn't understand what you said!"
 
-    return text
+    
 
 
-if listen_mic() == "Abrir bloco de notas":
-    pyautogui.PAUSE = 0.5
-    pyautogui.press("win")
-    pyautogui.write("Bloco de notas")
-    time.sleep(1)
-    pyautogui.press("Enter")
-    if listen_mic() == "escrever":
+while True:
+    command = listen_mic()
+    if command == "abrir bloco de notas":
+        pyautogui.press("win")
+        time.sleep(0.5)
+        pyautogui.write("Bloco de notas")
+        time.sleep(0.5)
         pyautogui.press("Enter")
-        pyautogui.write(listen_mic())
+        time.sleep(1)  
+    elif command.startswith("escrever"):
+        pyautogui.write(command)
 
+        break
