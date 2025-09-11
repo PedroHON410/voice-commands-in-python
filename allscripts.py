@@ -27,6 +27,24 @@ while True:
         pyautogui.press("Enter")
         time.sleep(1)  
     elif command.startswith("escrever"):
-        pyautogui.write(command)
-
+        text = command.replace("escrever", "").strip()
+        if text:
+            pyautogui.write(text)
+        else:
+            print("You just said 'escrever', but you didn't say what you want to write.")
+    elif command == "salvar arquivo":
+        pyautogui.hotkey("ctrl", "s")
+        time.sleep(0.5)
+        print("Say: 'nome do arquivo + [name]' to save.")
+        name_command = listen_mic()
+        if name_command.startswith("nome do arquivo"):
+            nameFile = name_command.replace("nome do arquivo", "").strip()
+            if nameFile:
+                pyautogui.write(nameFile)
+                time.sleep(0.5)
+                pyautogui.press("Enter")
+            else:
+                print("You just said 'nome do arquivo', but you didn't provide a name.")
+    elif command in ["sair", "fechar assistente", "encerrar"]:
+        print("Closing assistant...")
         break
