@@ -1,8 +1,8 @@
 import speech_recognition as sr 
 import pyautogui 
 import time 
-from dataclasses import dataclass 
-from listenMic import Listen
+from dataclasses import dataclass, field
+
 
 @dataclass 
 class Listen: 
@@ -11,11 +11,23 @@ class Listen:
     language: str = 'pt-BR'
     timeout: int = 9
     phrase_time_limit: int = 15
-    microphone: sr.Recognizer = sr.Recognizer()
+    microphone: sr.Recognizer = field(default_factory=sr.Recognizer, init=False)
+
+    def __post_init__(self):
+        
+        self.microphone.pause_threshold = self.pause_threshold
+        self.microphone.energy_threshold = self.energy_threshold
+
+        
+        self.commands = {
+            "abrir bloco de notas": self.openNotePad,
+            "salvar arquivo": self.saveFile,
+            "sair": self.closeAssistant,
+            "fechar": self.closeAssistant,
+            "encerrar": self.closeAssistant
+        }
     
     def listenMic(self): 
-        self.microphone.pause_threshold
-        self.microphone.energy_threshold 
         with sr.Microphone() as source: 
             self.microphone.adjust_for_ambient_noise(source) 
             print("Listen...") 
@@ -28,34 +40,46 @@ class Listen:
             return "I didn't understand what you said!" 
         
     def Comands(self): 
-        while True: 
-            command = Listen.listenMic() 
-            if command == "abrir bloco de notas": 
-                pyautogui.press("win") 
-                time.sleep(0.5) 
-                pyautogui.write("Bloco de notas") 
+            command = self.listenMic() 
+            if command in self.commands:
+                self.commands[command]()
+            else:
+                self.writeText(command)
+
+    def run(self):
+        while True:
+            self.Comands()
+
+    def openNotePad(self):
+        pyautogui.press("win") 
+        time.sleep(0.5) 
+        pyautogui.write("Bloco de notas") 
+        time.sleep(0.5) 
+        pyautogui.press("Enter") 
+        time.sleep(1) 
+
+    def writeText(self, text):
+        time.sleep(0.5)
+        pyautogui.write(text)
+        pyautogui.press("space")
+
+    def saveFile(self):
+        pyautogui.hotkey("ctrl", "s") 
+        time.sleep(0.5) 
+        print("Say: 'nome do arquivo + [name]' to save.") 
+        nameCommand = self.listenMic() 
+        if nameCommand.startswith("nome do arquivo"): 
+            nameFile = nameCommand.replace("nome do arquivo", "").strip() 
+            if nameFile: 
+                pyautogui.write(nameFile) 
                 time.sleep(0.5) 
                 pyautogui.press("Enter") 
-                time.sleep(1) 
-            elif command == "salvar arquivo": 
-                pyautogui.hotkey("ctrl", "s") 
-                time.sleep(0.5) 
-                print("Say: 'nome do arquivo + [name]' to save.") 
-                nameCommand = Listen.listenMic() 
-                if nameCommand.startswith("nome do arquivo"): 
-                    nameFile = nameCommand.replace("nome do arquivo", "").strip() 
-                    if nameFile: 
-                        pyautogui.write(nameFile) 
-                        time.sleep(0.5) 
-                        pyautogui.press("Enter") 
-                    else: 
-                        print("You just said 'nome do arquivo', but you didn't provide a name.") 
-            elif command in ["sair", "fechar", "encerrar"]: 
-                print("Closing assistant...") 
-                break 
-            else:
-                time.sleep(0.5)
-                pyautogui.write(command)
-                pyautogui.press("space")
+            else: 
+                print("You just said 'nome do arquivo', but you didn't provide a name.") 
 
-Listen.Comands()
+    def closeAssistant(self):
+        print("Closing assistant...")
+        exit()
+
+assistant = Listen()
+assistant.run()
